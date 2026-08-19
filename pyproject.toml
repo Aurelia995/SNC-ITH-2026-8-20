@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snc-ith"
+version = "0.1.0"
+description = "Reconstructed 3D dual-sequence MRI ITHscore and SNC analysis code"
+requires-python = ">=3.9"
+dependencies = [
+  "numpy>=1.23",
+  "scipy>=1.9",
+  "scikit-learn>=1.2",
+  "SimpleITK>=2.2",
+  "pyradiomics>=3.0",
+]
+
+[project.optional-dependencies]
+analysis = ["pandas>=1.5", "lifelines>=0.27", "matplotlib>=3.6", "seaborn>=0.12"]
+test = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

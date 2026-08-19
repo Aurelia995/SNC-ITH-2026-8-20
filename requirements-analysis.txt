@@ -1,0 +1,11 @@
+numpy>=1.23
+scipy>=1.9
+pandas>=1.5
+scikit-learn>=1.2
+SimpleITK>=2.2
+pyradiomics>=3.0
+lifelines>=0.27
+matplotlib>=3.6
+seaborn>=0.12
+openpyxl>=3.1
+pytest>=7

@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "SNC-ITH-2026-8-20"
+message: "Please cite this repository and the original ITHscore paper."
+type: software
+version: 0.1.0
+date-released: 2026-08-20
+references:
+  - type: article
+    title: "ITHscore: comprehensive quantification of intra-tumor heterogeneity in NSCLC by multi-scale radiomic features"
+    doi: "10.1007/s00330-022-09055-0"
