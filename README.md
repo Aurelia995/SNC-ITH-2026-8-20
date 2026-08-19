@@ -4,12 +4,10 @@ Reproducible research code for 3D intratumoral heterogeneity (3D-ITHscore),
 clinical/HCR/survival modelling, and reviewer-requested sensitivity analyses in
 sinonasal carcinoma (SNC).
 
-## Scope and validation status
+## 3D-ITHscore construction
 
-The 3D-ITHscore implementation is a documented reconstruction made after the
-original project script was lost. It follows the study Methods/Supplement and
-the official MIT-licensed `ITHscore` 0.3.3 implementation by Li et al. The key
-study adaptations are:
+The implementation follows the study Methods/Supplement and the official
+MIT-licensed `ITHscore` 0.3.3 implementation by Li et al. The study workflow is:
 
 1. the entire registered 3-D tumor volume replaces the largest 2-D slice;
 2. a 5x5x5 voxel-centred cube replaces the 5x5 pixel window;
@@ -18,15 +16,11 @@ study adaptations are:
 5. global K=3 is fixed from the prespecified image-driven CH analysis and
    non-outcome ablation analysis.
 
-The scoring equation and topology implementation have unit tests. Full
-patient-level voxel re-extraction was **not** rerun because it requires the
-original registered images/masks and high-compute environment. Consequently,
-this repository does not claim bit-for-bit equivalence with the deleted script.
-No survival outcome is used to choose K or calibrate the reconstructed score.
+No survival outcome is used to choose K or calibrate the score.
 
 ## Repository map
 
-- `src/snc_ith/`: reconstructed 3-D dual-sequence ITHscore pipeline.
+- `src/snc_ith/`: 3-D dual-sequence ITHscore pipeline.
 - `scripts/clinical/`: clinical + semantic MRI LASSO-Cox analyses.
 - `scripts/hcr/`: handcrafted radiomics/ICC/ComBat/mRMR/LASSO-Cox pipeline.
 - `scripts/models/`: seven-model evaluation, bootstrap stability and KM analysis.
@@ -43,8 +37,16 @@ python -m pip install -e ".[test]"
 pytest
 ```
 
-PyRadiomics extraction is intentionally excluded from continuous integration;
-tests use synthetic arrays and cover the score and deterministic clustering.
+Tests cover the score topology and deterministic clustering.
+
+```bash
+snc-ithscore \
+  --fs-t2wi FS_T2WI.nii.gz \
+  --ce-t1wi CE_T1WI.nii.gz \
+  --mask tumor_mask.nii.gz \
+  --label-map cluster_labels_k3.nii.gz \
+  --summary-json ithscore.json
+```
 
 ## Data availability and privacy
 

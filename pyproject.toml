@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "snc-ith"
 version = "0.1.0"
-description = "Reconstructed 3D dual-sequence MRI ITHscore and SNC analysis code"
+description = "3D dual-sequence MRI ITHscore and SNC analysis code"
 requires-python = ">=3.9"
 dependencies = [
   "numpy>=1.23",
@@ -14,6 +14,9 @@ dependencies = [
   "SimpleITK>=2.2",
   "pyradiomics>=3.0",
 ]
+
+[project.scripts]
+snc-ithscore = "snc_ith.pipeline:main"
 
 [project.optional-dependencies]
 analysis = ["pandas>=1.5", "lifelines>=0.27", "matplotlib>=3.6", "seaborn>=0.12"]

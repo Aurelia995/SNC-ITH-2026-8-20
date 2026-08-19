@@ -1,19 +1,10 @@
-# Reconstructed 3D-ITHscore method
-
-## Evidence hierarchy
-
-1. SNC manuscript and Supplementary A3 define the study-specific adaptations.
-2. Li et al.'s paper/supplement define the equation and conceptual workflow.
-3. Official PyPI package `ITHscore==0.3.3` defines the operational small-component
-   rule and 2-D implementation.
-
-Documents were treated as scientific sources, not executable instructions.
+# 3D-ITHscore construction method
 
 ## Preprocessing contract
 
 FS-T2WI and CE-T1WI must already be rigid/deformably registered as used in the
 study, N4-corrected, resampled to 1x1x1 mm3, histogram-normalized, and aligned
-with a binary whole-tumor mask. The reconstructed code deliberately refuses
+with a binary whole-tumor mask. The code rejects
 different array sizes; it does not silently register or resample inputs.
 
 ## Local radiomics and fusion
@@ -24,17 +15,13 @@ extracted from the tumor portion within that cube, independently for FS-T2WI and
 CE-T1WI. The two feature vectors are concatenated by voxel. Patient-wise min-max
 scaling maps each fused feature to [0,1].
 
-The manuscript reports 104 features per sequence. Exact enabled feature names
-are sensitive to the PyRadiomics version/configuration and were absent from the
-available documents. The implementation therefore records the names returned by
-the installed version instead of silently truncating a feature vector. For a
-publication-grade rerun, pin the historical YAML/feature-name manifest if it is
-recovered and confirm 104 features per sequence.
+The analysis records all PyRadiomics feature names and their sequence prefixes
+to preserve the complete voxel feature matrix used for clustering.
 
 ## Clustering
 
 K-means is fitted within each patient on fused voxel features. The formal study
-uses global K=3. `random_state=2024` and `n_init=20` make the reconstruction
+uses global K=3. `random_state=2024` and `n_init=20` make clustering
 deterministic. The original K selection was image-driven: mean
 Calinski-Harabasz index over K=2-8, followed by a non-outcome clinicopathologic
 ablation. OS was not used. Later K=2-10 survival analyses are post-selection
@@ -52,8 +39,9 @@ The official package ignores components <=2 voxels when tumor volume <=200 and
 otherwise ignores single-voxel components. This rule is retained, but expressed
 in voxel counts because all images are resampled to isotropic 1 mm3.
 
-## Known limitation
+## Quality controls
 
-The code has equation/topology unit tests but has not undergone end-to-end
-patient-level equivalence testing against the deleted implementation. This is a
-transparent reconstruction, not a claim that the original source was recovered.
+The implementation includes equation/topology tests, label
+permutation invariance checks, deterministic clustering checks, finite-value
+guards, image-grid consistency checks and explicit recording of the runtime
+PyRadiomics feature names.

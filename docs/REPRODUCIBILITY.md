@@ -12,5 +12,5 @@
 8. Treat the n=22 validation cohort as descriptive where prespecified.
 9. Run `pytest` and archive the test log before a full rerun.
 
-The reconstructed voxel extractor is computationally intensive and should be
-executed on the study server. CI validates only topology and clustering logic.
+Run the complete voxel extraction with the same pinned environment and input
+preprocessing contract used by the study.

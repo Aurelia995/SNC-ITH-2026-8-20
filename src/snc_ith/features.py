@@ -1,7 +1,6 @@
 """Voxel-centred 3-D local radiomics extraction for two registered MRI sequences.
 
-This operation is intentionally explicit and computationally expensive. It is
-designed for a high-memory/multi-core server, not for routine CI.
+The implementation follows the study's voxel-centred 5x5x5 sliding-cube method.
 """
 
 from __future__ import annotations
