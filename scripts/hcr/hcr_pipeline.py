@@ -6,7 +6,7 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np, pandas as pd, seaborn as sns
 from lifelines.utils import concordance_index
-from neuroCombat import neuroCombat
+from neuroCombat import neuroCombat, neuroCombatFromTraining
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
@@ -93,14 +93,106 @@ def main():
     pd.DataFrame([{'removed_feature':f,'retained_correlated_feature':pairs[f][0],'absolute_r':pairs[f][1]} for f in dropcor]).to_csv(out/'correlation_filter_removed.csv',index=False)
     (out/'correlation_retained_features.txt').write_text('\n'.join(keepcor)+'\n')
     Xtr=Xtr[keepcor]; Xv=Xv[keepcor]
-    scan=pd.read_excel(a.scanner).iloc[1:,[2,3,4]].copy(); scan.columns=['patient_id','scanner_t1','scanner_t2']; scan.patient_id=scan.patient_id.map(nid)
-    meta=pd.concat([tr[['patient_id','OS/label','OS/m']].assign(cohort='Training'),va[['patient_id','OS/label','OS/m']].assign(cohort='Validation')]).merge(scan,on='patient_id',validate='one_to_one')
-    mtr=meta.cohort.eq('Training'); batch=(meta.loc[mtr,'scanner_t1'].astype(str).str.strip()+' | '+meta.loc[mtr,'scanner_t2'].astype(str).str.strip())
-    vc=batch.value_counts(); batch=batch.where(~batch.isin(vc[vc<5].index),'Other')
-    bd=batch.value_counts().rename_axis('batch').reset_index(name='N'); bd['proportion']=bd.N/len(batch); bd.to_csv(out/'batch_distribution.csv',index=False)
-    cb=neuroCombat(dat=Xtr.T,covars=pd.DataFrame({'batch':batch.values}),batch_col='batch'); Ctr=pd.DataFrame(cb['data'].T,columns=keepcor); Cv=Xv.copy()
-    if not np.isfinite(Ctr).all().all(): raise SystemExit('ComBat produced nonfinite values')
-    scaler=StandardScaler().fit(Ctr); Ztr=pd.DataFrame(scaler.transform(Ctr),columns=keepcor); Zv=pd.DataFrame(scaler.transform(Cv),columns=keepcor)
+    # Scanner metadata
+scan = pd.read_excel(a.scanner).iloc[1:, [2, 3, 4]].copy()
+scan.columns = ['patient_id', 'scanner_t1', 'scanner_t2']
+scan.patient_id = scan.patient_id.map(nid)
+
+# Preserve the patient order of Xtr and Xv
+meta_tr = tr[['patient_id']].merge(
+    scan, on='patient_id', how='left', validate='one_to_one', sort=False
+)
+meta_va = va[['patient_id']].merge(
+    scan, on='patient_id', how='left', validate='one_to_one', sort=False
+)
+
+if meta_tr[['scanner_t1', 'scanner_t2']].isna().any().any():
+    raise SystemExit('Missing scanner metadata in the training cohort')
+if meta_va[['scanner_t1', 'scanner_t2']].isna().any().any():
+    raise SystemExit('Missing scanner metadata in the validation cohort')
+
+# Construct the scanner-combination batch
+batch_tr_raw = (
+    meta_tr['scanner_t1'].astype(str).str.strip()
+    + ' | '
+    + meta_tr['scanner_t2'].astype(str).str.strip()
+)
+
+batch_va_raw = (
+    meta_va['scanner_t1'].astype(str).str.strip()
+    + ' | '
+    + meta_va['scanner_t2'].astype(str).str.strip()
+)
+
+# Batch pooling is determined from the training cohort only
+vc = batch_tr_raw.value_counts()
+rare_batches = set(vc[vc < 5].index)
+
+batch_tr = batch_tr_raw.where(
+    ~batch_tr_raw.isin(rare_batches), 'Other'
+)
+batch_va = batch_va_raw.where(
+    ~batch_va_raw.isin(rare_batches), 'Other'
+)
+
+# neuroCombatFromTraining cannot estimate a new validation-only batch
+unseen_batches = sorted(set(batch_va.unique()) - set(batch_tr.unique()))
+if unseen_batches:
+    raise SystemExit(
+        'Validation contains scanner batches absent from training: '
+        + ', '.join(unseen_batches)
+    )
+
+# Save batch information
+bd = batch_tr.value_counts().rename_axis('batch').reset_index(name='N')
+bd['proportion'] = bd.N / len(batch_tr)
+bd.to_csv(out / 'batch_distribution.csv', index=False)
+
+# Fit ComBat using training data only
+cb = neuroCombat(
+    dat=Xtr.T.to_numpy(),
+    covars=pd.DataFrame({'batch': batch_tr.to_numpy()}),
+    batch_col='batch'
+)
+
+Ctr = pd.DataFrame(
+    cb['data'].T,
+    columns=keepcor,
+    index=Xtr.index
+)
+
+# Freeze the training estimates and project them to validation data
+cb_validation = neuroCombatFromTraining(
+    dat=Xv.T.to_numpy(),
+    batch=batch_va.to_numpy(),
+    estimates=cb['estimates']
+)
+
+Cv = pd.DataFrame(
+    cb_validation['data'].T,
+    columns=keepcor,
+    index=Xv.index
+)
+
+if not np.isfinite(Ctr.to_numpy()).all():
+    raise SystemExit('Training ComBat produced nonfinite values')
+if not np.isfinite(Cv.to_numpy()).all():
+    raise SystemExit('Validation ComBat projection produced nonfinite values')
+
+# Standardization parameters are also fitted on training data only
+scaler = StandardScaler().fit(Ctr)
+
+Ztr = pd.DataFrame(
+    scaler.transform(Ctr),
+    columns=keepcor,
+    index=Ctr.index
+)
+
+Zv = pd.DataFrame(
+    scaler.transform(Cv),
+    columns=keepcor,
+    index=Cv.index
+)
     # mRMRe survival Top 15 on training only.
     mdat=pd.concat([tr[['OS/m','OS/label']].rename(columns={'OS/m':'time','OS/label':'event'}).reset_index(drop=True),Ztr.reset_index(drop=True)],axis=1); mdat.to_csv(out/'mRMR_input_train.csv',index=False)
     rr=subprocess.run(['Rscript',a.r_script,str(out/'mRMR_input_train.csv'),str(out)],capture_output=True,text=True); (out/'mRMR_R.log').write_text(rr.stdout+'\nSTDERR\n'+rr.stderr)
