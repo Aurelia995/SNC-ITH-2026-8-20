@@ -265,12 +265,12 @@ K=2-10九种配置的连续评分HR方向{'全部一致（均为HR>1）' if dire
 
 结论
 ----
-跨K的评分相关、风险分组一致性、连续Cox效应方向及KM分层结果共同用于评价敏感性。无论个别非K=3配置的点估计是否更高，均不得据此更改正式K=3，因为K=3已由结局盲法的无监督CH标准及非结局病理消融分析事先确定。本分析不构成新的K值优化过程，也不支持使用OS反向选择K。
+跨K的评分相关、风险分组一致性、连续Cox效应方向及KM分层结果共同用于评价敏感性。无论个别非K=3配置的点估计是否更高，均不得据此更改正式K=3，因为K=3已由结局盲法的无监督CH标准事先确定。本分析不构成新的K值优化过程，也不支持使用OS反向选择K。
 """
 (OUT / "中文完整分析报告.txt").write_text(summary_cn, encoding="utf-8")
 
 methods = f"""Methods and leakage-control statement
-The choice of K=3 preceded all survival analyses. First, K=3 maximized the Calinski-Harabasz index over the prespecified image-only, unsupervised search range K=2-8, using voxel-level imaging features without clinical or outcome information. Second, a cross-sectional ablation analysis against non-outcome pathological categories (Supplementary Table S3) also favored K=3. The present OS analyses were conducted only after K had been fixed and were treated exclusively as post-selection sensitivity analyses, not as a procedure for selecting or optimizing K.
+The choice of K=3 preceded all survival analyses. First, K=3 maximized the Calinski-Harabasz index over the prespecified image-only, unsupervised search range K=2-10, using voxel-level imaging features without clinical or outcome information. The present OS analyses were conducted only after K had been fixed and were treated exclusively as post-selection sensitivity analyses, not as a procedure for selecting or optimizing K.
 
 Score stability was described in all 151 patients using pairwise-complete Spearman correlations across K=2-10; no missing score was imputed. Following the strategy illustrated by Li et al., the full annotated correlation matrix was displayed as a heatmap. Training-cohort (n=129) median splits defined separately for each K were compared with the K=3 split using Cohen's kappa. Survival inference was restricted to the training cohort (68 deaths). For each K, univariable Cox models reported effects per raw score unit and per one standard deviation, with Wald tests and Benjamini-Hochberg correction across nine K values. Harrell's C-index confidence intervals used 1,000 case-resampling bootstrap replicates with seed 2024. Each K-specific median was used for Kaplan-Meier/log-rank analysis. The validation cohort (n=22, 6 deaths) was analyzed only descriptively and was not used for hypothesis testing, K selection, or model optimization.
 """
@@ -298,7 +298,7 @@ index.to_csv(OUT / "Output_File_Index.csv", index=False)
 shutil.copy2(__file__, OUT / "k_sensitivity_analysis.py")
 meta = {"seed": SEED, "all_N": len(d), "training_N": len(train), "training_events": int(train.event.sum()), "validation_N": len(val), "validation_events": int(val.event.sum()),
         "K_values": KS, "bootstrap_per_K": 1000, "survival_inference_cohort": "Training only", "validation_role": "Descriptive only",
-        "K3_selection_timing": "Before OS analyses", "K3_selection_inputs": "Image-only unsupervised CH index, followed by non-outcome pathology ablation"}
+       "K3_selection_inputs": "Image-only unsupervised mean CH index over K=2-10"
 (OUT / "Reproducibility_metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
 manifest=[]
