@@ -13,8 +13,8 @@ MIT-licensed `ITHscore` 0.3.3 implementation by Li et al. The study workflow is:
 2. a 5x5x5 voxel-centred cube replaces the 5x5 pixel window;
 3. FS-T2WI and CE-T1WI local feature vectors are concatenated before clustering;
 4. connected components use 26-connectivity;
-5. global K=3 is fixed from the prespecified image-driven CH analysis and
-   non-outcome ablation analysis.
+5. global K=3 is fixed from the prespecified image-driven mean
+Calinski-Harabasz analysis over K=2-10.
 
 No survival outcome is used to choose K or calibrate the score.
 
