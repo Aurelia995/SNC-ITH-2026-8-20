@@ -22,10 +22,10 @@ to preserve the complete voxel feature matrix used for clustering.
 
 K-means is fitted within each patient on fused voxel features. The formal study
 uses global K=3. `random_state=2024` and `n_init=20` make clustering
-deterministic. The original K selection was image-driven: mean
-Calinski-Harabasz index over K=2-8, followed by a non-outcome clinicopathologic
-ablation. OS was not used. Later K=2-10 survival analyses are post-selection
-sensitivity analyses and must not be used to reselect K.
+The global number of clusters was selected by comparing the full-cohort
+mean Calinski-Harabasz index over K=2-10 using voxel-level imaging
+features only. K=3 yielded the highest mean index and was fixed before
+all survival analyses. Survival outcomes were not used to select K.
 
 ## 3-D score
 
