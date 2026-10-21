@@ -5,7 +5,7 @@
 3. Confirm both MRI sequences and mask share size, origin, spacing and direction.
 4. Confirm the installed PyRadiomics version returns the intended 104-feature
    manifest per sequence; do not select features by output position.
-5. Run K=2-8 CH calculations without loading survival outcomes; retain K=3 for
+5. Run K=2-10 CH calculations without loading survival outcomes; retain K=3 for
    the formal pipeline.
 6. Save label maps, CH values, feature names, K-means seed and software versions.
 7. Fit preprocessing/model selection on training data only.
